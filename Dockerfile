@@ -28,6 +28,8 @@ RUN composer install --no-dev --optimize-autoloader
 # Cache Laravel config/routes/views
 RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
 
+RUN apt-get update && apt-get install -y postgresql-client
+
 # Expose port (Render uses this to detect container port)
 EXPOSE 8000
 
