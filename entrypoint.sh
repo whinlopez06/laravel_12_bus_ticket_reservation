@@ -1,33 +1,41 @@
 #!/bin/sh
 set -e
 
-# Wait for Postgres to be ready
-until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME"; do
-  echo "Waiting for database..."
-  sleep 2
+echo "⏳ Waiting for PostgreSQL to be ready..."
+
+# Wait up to 60 seconds for DB
+timeout=60
+while ! pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" >/dev/null 2>&1; do
+  timeout=$((timeout - 1))
+  if [ $timeout -le 0 ]; then
+    echo "❌ Database is not responding. Exiting."
+    exit 1
+  fi
+  echo "Waiting for database... ($timeout)"
+  sleep 1
 done
 
-echo "Clearing and Caching Configuration..."
+echo "✅ Database is ready!"
+
+echo "Clearing config cache..."
 php artisan config:clear
-php artisan cache:clear
-php artisan route:clear
-php artisan view:clear
+
+echo "Caching Laravel configuration..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
 echo "--- 🛠️ Database Connection Details ---"
-echo "Database Host: $DB_HOST"
-echo "Database Name: $DB_DATABASE"
-echo "Database User: $DB_USERNAME"
-echo "Database Pass: $DB_PASSWORD"
-echo "-------------------------------------"
+echo "Host: $DB_HOST"
+echo "Database: $DB_DATABASE"
+echo "User: $DB_USERNAME"
+echo "--------------------------------------"
 
-echo "Running Laravel migrations..."
+echo "🚀 Running migrations..."
 php artisan migrate --force || {
-    echo "Migration failed!"
+    echo "❌ Migration failed!"
     exit 1
 }
 
-echo "Starting Laravel application..."
+echo "🎉 Starting Laravel..."
 exec "$@"

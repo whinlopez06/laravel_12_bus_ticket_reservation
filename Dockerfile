@@ -1,7 +1,7 @@
-# Use official PHP 8.2 image with required extensions
+# Use official PHP 8.2 FPM image
 FROM php:8.2-fpm
 
-# Install system dependencies
+# Install system dependencies including libpq-dev for PostgreSQL
 RUN apt-get update && apt-get install -y \
     curl \
     zip \
@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
-    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
+    libpq-dev \        # ← REQUIRED for pdo_pgsql / pgsql
+    && docker-php-ext-install pdo pdo_pgsql pgsql mbstring zip exif pcntl bcmath gd
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -28,17 +29,18 @@ RUN composer install --no-dev --optimize-autoloader
 # Cache Laravel config/routes/views
 RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
 
+# Optional: install PostgreSQL client for artisan tinker, migrations, pg_dump, etc.
 RUN apt-get update && apt-get install -y postgresql-client
 
-# Expose port (Render uses this to detect container port)
+# Expose port for Render
 EXPOSE 8000
 
-# Copy the entrypoint script
+# Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh   # ← IMPORTANT so it can run!
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Set the entrypoint
+# Set entrypoint
 ENTRYPOINT ["entrypoint.sh"]
 
-# Start Laravel server AFTER migrations run
+# Start Laravel server
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
