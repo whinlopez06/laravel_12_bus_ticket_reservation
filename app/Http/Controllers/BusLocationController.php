@@ -12,7 +12,9 @@ class BusLocationController extends Controller
      */
     public function index()
     {
-        //
+         //return $busLocations = BusLocation::all();
+         return BusLocation::select('id', 'name')->get();
+         //$result = !empty($busLocations) ? $busLocations : [];
     }
 
     /**
@@ -36,7 +38,8 @@ class BusLocationController extends Controller
      */
     public function show(BusLocation $busLocation)
     {
-        //
+        return $busLocation = BusLocation::find(9);
+        // return response()->json([$busLocation]);
     }
 
     /**
@@ -63,7 +66,7 @@ class BusLocationController extends Controller
         //
     }
 
-    public function getBusLocations() {
-       return BusLocation::all();
-    }
+    // public function getBusLocations() {
+    //    return BusLocation::all();
+    // }
 }

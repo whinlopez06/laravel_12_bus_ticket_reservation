@@ -79,7 +79,7 @@ class BusDetailController extends Controller
 
     public function getBuses() {
         $buses = BusDetail::with(relations: ['bus:id,name', 'busOperator:id,name'])
-        ->get(['id','bus_operator_id', 'description', 'bus_id','seat_capacity'])
+        ->get(['id','bus_operator_id', 'description', 'bus_id','seat_capacity', 'price'])
         ->map( function ($busDetail) {
             return [
                 'id' => $busDetail->id,
@@ -87,6 +87,7 @@ class BusDetailController extends Controller
                 'bus_name' => $busDetail->bus->name,
                 'bus_full_description' => $busDetail->bus_full_description,
                 'seat_capacity' => $busDetail->seat_capacity,
+                'price' => $busDetail->price
             ];
         });
         return $buses;
