@@ -11,8 +11,11 @@ done
 
 echo "Database is up!"
 
-echo "Current database:"
-php -r "echo env('DB_CONNECTION').\"\\n\";"
+echo "DB_HOST=$DB_HOST"
+echo "DB_PORT=$DB_PORT"
+echo "DB_DATABASE=$DB_DATABASE"
+echo "DB_USERNAME=$DB_USERNAME"
+echo "DB_CONNECTION=$DB_CONNECTION"
 
 # Run migrations
 php artisan migrate --force || true
