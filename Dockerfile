@@ -34,5 +34,9 @@ RUN php artisan config:cache && \
 # Expose port
 EXPOSE 8080
 
+RUN php artisan migrate --force
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+
 # Start Laravel server
 CMD php artisan serve --host=0.0.0.0 --port=8080
