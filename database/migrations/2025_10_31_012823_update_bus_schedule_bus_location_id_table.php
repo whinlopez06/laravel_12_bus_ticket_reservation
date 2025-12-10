@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\BusLocation;
+use App\Models\Location;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class BusLocation extends Model
+class Location extends Model
 {
     protected $fillable = [
         'name',
-        'code',
+        'location_grouping_id'
     ];
 }

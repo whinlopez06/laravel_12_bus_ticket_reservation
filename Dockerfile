@@ -1,46 +1,33 @@
-# Use official PHP 8.2 FPM image
+# Production PHP image
 FROM php:8.2-fpm
 
-# Install system dependencies including libpq-dev for PostgreSQL
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
-    zip \
-    unzip \
-    git \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql pgsql mbstring zip exif pcntl bcmath gd
+    git unzip libpq-dev libonig-dev libxml2-dev libzip-dev \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Set working directory
-WORKDIR /var/www/html
+WORKDIR /var/www
 
-# Copy project files
+# Copy app
 COPY . .
 
-# Install PHP dependencies
+# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Cache Laravel config/routes/views
-RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
+# Build frontend assets
+RUN npm install && npm run build
 
-# Optional: install PostgreSQL client for artisan tinker, migrations, pg_dump, etc.
-RUN apt-get update && apt-get install -y postgresql-client
+# Cache Laravel optimizations
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
 
-# Expose port for Render
-EXPOSE 8000
+# Expose port
+EXPOSE 8080
 
-# Copy entrypoint script
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# Set entrypoint
-ENTRYPOINT ["entrypoint.sh"]
-
-# Start Laravel server
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# Use Laravel's built-in HTTP server
+CMD php artisan serve --host=0.0.0.0 --port=8080

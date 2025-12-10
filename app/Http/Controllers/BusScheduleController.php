@@ -41,6 +41,8 @@ class BusScheduleController extends Controller
                     'operator' => $schedule->BusDetail->busOperator->name,
                     'from_bus_location' => $schedule->fromBusLocation->name ?? null,
                     'to_bus_location' => $schedule->toBusLocation->name ?? null,
+                    'from_bus_location_id' => $schedule->fromBusLocation->id,
+                    'to_bus_location_id' => $schedule->toBusLocation->id,
                     'departure_time' => $schedule->departure_time,
                     'arrival_time' => $schedule->arrival_time,
                     'schedule_date' => $schedule->schedule_date,
@@ -133,50 +135,47 @@ class BusScheduleController extends Controller
     public function searchBusSchedule(Request $request)
     {
         try {
-            if (is_null($request->schedule_date) || $request->schedule_date === 'null') {
-                $request->schedule_date = null;
-            }
-            $busSchedules = BusSchedule::with([
-                'busDetail' => function ($query) {
-                    $query->select('id','bus_id','description','seat_capacity','price');
-                },
-                'busDetail.bus:id,name',
-                'fromBusLocation:id,name',
-                'toBusLocation:id,name',
-            ])
-            ->when($request->from_bus_location_id, function($query, $fromId) {
-                $query->where('from_bus_location_id', $fromId);
-            })
-            ->when($request->to_bus_location_id, function($query, $toId) {
-                $query->where('to_bus_location_id', $toId);
-            })
-            ->when($request->schedule_date, function($query, $date){
-                $query->whereDate('schedule_date', $date);
-                //$query->whereDate('schedule_date', $date);
-            })
-            ->get([
-                'id',
-                'bus_detail_id',
-                'from_bus_location_id',
-                'to_bus_location_id',
-                'departure_time',
-                'arrival_time',
-                'schedule_date',
-            ])
-            ->map(function ($schedule){
-                return [
-                    'id' => $schedule->id,
-                    'bus_name' => $schedule->busDetail->bus->name ?? null,
-                    'description' => $schedule->busDetail->description ?? null,
-                    'from_bus_location' => $schedule->fromBusLocation->name ?? null,
-                    'to_bus_location' => $schedule->toBusLocation->name ?? null,
-                    'departure_time' => $schedule->departure_time,
-                    'arrival_time' => $schedule->arrival_time,
-                    'schedule_date' => $schedule->schedule_date,
-                    'seat_capacity' =>$schedule->BusDetail->seat_capacity ?? null,
-                    'price' => $schedule->BusDetail->price ?? null
-                ];
-            });
+            $travelDate = (is_null($request->travel_date) || $request->travel_date === 'null') ? null : $request->travel_date;
+
+            $busSchedules = BusSchedule::query()
+                ->with([
+                    'busDetail:id,bus_id,description,seat_capacity,price',
+                    'busDetail.bus:id,name',
+                    'fromLocation:id,name',
+                    'toLocation:id,name',
+                ])
+                ->when($request->from_location_id, fn($q, $id) =>
+                    $q->where('from_location_id', $id)
+                )
+                ->when($request->to_location_id, fn($q, $id) =>
+                    $q->where('to_location_id', $id)
+                )
+                ->when($travelDate, fn($q, $date) =>
+                    $q->whereDate('travel_date', $date)
+                )
+                ->get([
+                    'id',
+                    'bus_detail_id',
+                    'from_location_id',
+                    'to_location_id',
+                    'boarding_time',
+                    'travel_date',
+                ])
+                ->map(function ($schedule) {
+                    $detail = $schedule->busDetail;
+
+                    return [
+                        'id'            => $schedule->id,
+                        'bus_name'      => $detail->bus->name ?? null,
+                        'description'   => $detail->description ?? null,
+                        'from_location' => $schedule->fromLocation->name ?? null,
+                        'to_location'   => $schedule->toLocation->name ?? null,
+                        'boarding_time' => $schedule->boarding_time,
+                        'travel_date'   => $schedule->travel_date,
+                        'seat_capacity' => $detail->seat_capacity ?? null,
+                        'price'         => $detail->price ?? null,
+                    ];
+                });
 
             return $busSchedules;
 
@@ -242,29 +241,25 @@ class BusScheduleController extends Controller
             $busSchedules = BusSchedule::query()
                 ->join('bus_details', 'bus_schedules.bus_detail_id', '=', 'bus_details.id')
                 ->join('buses', 'bus_details.bus_id', '=', 'buses.id')
-                ->join('bus_locations as bus_locations_from', 'bus_schedules.from_bus_location_id', '=', 'bus_locations_from.id')
-                ->join('bus_locations as bus_locations_to', 'bus_schedules.to_bus_location_id', '=', 'bus_locations_to.id')
+                ->join('locations as locations_from', 'bus_schedules.from_location_id', '=', 'locations_from.id')
+                ->join('locations as locations_to', 'bus_schedules.to_location_id', '=', 'locations_to.id')
                 ->select(
-                    // 'buses.name as bus_name',
-                    'bus_locations_from.id as location_from_id',
-                    'bus_locations_to.id as location_to_id',
-                    'bus_locations_from.name as from_bus_location',
-                    'bus_locations_to.name as to_bus_location',
-                    // 'bus_schedules.departure_time',
-                    'bus_schedules.schedule_date',
+                    'locations_from.id as from_location_id',
+                    'locations_to.id as to_location_id',
+                    'locations_from.name as from_location',
+                    'locations_to.name as to_location',
+                    'bus_schedules.travel_date',
                     DB::raw('COUNT(*) as bus_count')
                 )
                 ->groupBy(
-                    // 'buses.name',
-                    'location_from_id',
-                    'location_to_id',
-                    'bus_locations_from.name',
-                    'bus_locations_to.name',
-                    // 'bus_schedules.departure_time',
-                    'bus_schedules.schedule_date'
+                    'locations_from.id',
+                    'locations_to.id',
+                    'locations_from.name',
+                    'locations_to.name',
+                    'bus_schedules.travel_date'
                 )
                 ->orderBy(
-                    'bus_locations_from.name', 'asc'
+                    'locations_from.name', 'asc'
                 )
                 ->get();
 

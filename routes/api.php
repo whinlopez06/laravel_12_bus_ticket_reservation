@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BusDetailController;
-use App\Http\Controllers\BusLocationController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\BusScheduleBookingController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\BusScheduleController;
@@ -28,12 +28,13 @@ Route::get('/bus-detail/buses/', action: [BusDetailController::class, 'getBuses'
 
 
 // Bus Location
-Route::get('/bus-location', [BusLocationController::class, 'index']);
+Route::get('/bus-location', [LocationController::class, 'index']);
 
 
 // Bus Schedule
 Route::get('/bus-schedule/search',[BusScheduleController::class, 'searchBusSchedule']);
 Route::get('/bus-schedule/booking/{id}', [BusScheduleController::class, 'getBusScheduleById']);
+
 Route::post('/bus-schedule/store', [BusScheduleController:: class,'store']);
 Route::get('/bus-schedule/index', [BusScheduleController:: class,'index']);
 Route::get('/bus-schedule/summary', [BusScheduleController::class, 'getBusScheduleSummary']);
@@ -42,7 +43,7 @@ Route::get('/bus-schedule/summary', [BusScheduleController::class, 'getBusSchedu
 // Bus Schedule Booking
 // Route::get();
 Route::post('/bus-schedule-booking/store', [BusScheduleBookingController:: class,'store']);
-Route::get('/bus-schedule-booking/{scheduleId}', [BusScheduleBookingController::class, 'getBusScheduleBookingByScheduleId']);
+Route::get('/bus-schedule-booking/{scheduleId}', action: [BusScheduleBookingController::class, 'getBusScheduleBookingByScheduleId']);
 
 
 

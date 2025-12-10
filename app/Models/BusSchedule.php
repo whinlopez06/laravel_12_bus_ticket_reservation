@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\BusOperator;
 use App\Models\BusDetail;
-use App\Models\BusLocation;
+use App\Models\Location;
 use App\Models\BusScheduleBooking;
 
 class BusSchedule extends Model
@@ -28,12 +28,12 @@ class BusSchedule extends Model
         return $this->belongsTo(BusDetail::class);
     }
 
-    public function fromBusLocation() {
-        return $this->belongsTo(BusLocation::class, 'from_bus_location_id');
+    public function fromLocation() {
+        return $this->belongsTo(Location::class, 'from_location_id');
     }
 
-    public function toBusLocation() {
-        return $this->belongsTo(BusLocation::class, 'to_bus_location_id');
+    public function toLocation() {
+        return $this->belongsTo(Location::class, 'to_location_id');
     }
 
     public function busScheduleBooking() {
