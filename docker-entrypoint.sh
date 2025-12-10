@@ -11,6 +11,9 @@ done
 
 echo "Database is up!"
 
+echo "Current database:"
+php -r "echo env('DB_CONNECTION').\"\\n\";"
+
 # Run migrations
 php artisan migrate --force || true
 
