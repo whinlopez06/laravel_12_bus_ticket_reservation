@@ -1,10 +1,9 @@
 FROM php:8.2-fpm
 
-# System dependencies
+# Dependencies
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpq-dev libonig-dev libxml2-dev libzip-dev netcat-openbsd \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip \
-    && rm -rf /var/lib/apt/lists/*
+    git curl zip unzip libzip-dev libpq-dev libonig-dev libxml2-dev netcat-openbsd \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip
 
 # Node.js 20
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -14,20 +13,13 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
-
-# Copy app
 COPY . .
 
-# PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
-
-# Frontend build
 RUN npm install && npm run build
 
-# Laravel cache
-RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
+# Do NOT cache config here
 
-# Copy entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
