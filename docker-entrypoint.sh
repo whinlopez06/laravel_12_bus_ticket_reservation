@@ -1,14 +1,17 @@
 #!/bin/sh
 set -e
 
+# Hardcoded DB credentials from your Railway MySQL
+DB_HOST="shinkansen.proxy.rlwy.net"
+DB_PORT="38442"
+DB_DATABASE="railway"
+DB_USERNAME="root"
+DB_PASSWORD="fpijFkPZviwUJedUuiSvJolxciIdofUj"
+DB_CONNECTION="mysql"
+
 echo "DB_HOST=$DB_HOST"
 echo "DB_PORT=$DB_PORT"
 echo "DB_DATABASE=$DB_DATABASE"
-
-if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ]; then
-  echo "ERROR: DB variables are missing"
-  exit 1
-fi
 
 until nc -z -v -w30 "$DB_HOST" "$DB_PORT"
 do
