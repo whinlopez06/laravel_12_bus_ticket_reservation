@@ -1,5 +1,7 @@
 #!/bin/sh
-set -e
+echo "ENV VAR TEST:"
+env
+sleep 10
 
 # Print env vars (debug)
 echo "DB_HOST=$DB_HOST"
