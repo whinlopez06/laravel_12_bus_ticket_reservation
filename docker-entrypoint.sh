@@ -1,6 +1,18 @@
 #!/bin/sh
+set -e
 
-# Wait until MySQL is ready
+echo "DB_HOST = $DB_HOST"
+echo "DB_PORT = $DB_PORT"
+echo "DB_DATABASE = $DB_DATABASE"
+echo "DB_USERNAME = $DB_USERNAME"
+echo "DB_PASSWORD = $DB_PASSWORD"
+echo "DB_CONNECTION = $DB_CONNECTION"
+
+if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ]; then
+  echo "ERROR: DB_HOST or DB_PORT is not set!"
+  exit 1
+fi
+
 echo "Waiting for MySQL..."
 
 until nc -z -v -w30 "$DB_HOST" "$DB_PORT"
@@ -11,14 +23,6 @@ done
 
 echo "Database is up!"
 
-echo "DB_HOST=$DB_HOST"
-echo "DB_PORT=$DB_PORT"
-echo "DB_DATABASE=$DB_DATABASE"
-echo "DB_USERNAME=$DB_USERNAME"
-echo "DB_CONNECTION=$DB_CONNECTION"
+php artisan migrate --force
 
-# Run migrations
-php artisan migrate --force || true
-
-# Finally start Laravel
 php artisan serve --host=0.0.0.0 --port=8080
