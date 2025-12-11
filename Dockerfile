@@ -1,28 +1,49 @@
+# Use official PHP 8.2 FPM image
 FROM php:8.2-fpm
 
-# Dependencies
+# Install system dependencies including libpq-dev for PostgreSQL
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libzip-dev libpq-dev libonig-dev libxml2-dev netcat-openbsd \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip
+    git  \
+    nodejs \
+    npm \
+    curl \
+    zip \
+    unzip \
+    git \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql pgsql mbstring zip exif pcntl bcmath gd
 
-# Node.js 20
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
-
-# Composer
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy project files
 COPY . .
 
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
-RUN npm install && npm run build
 
-# Do NOT cache config here
+# Cache Laravel config/routes/views
+RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
 
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Optional: install PostgreSQL client for artisan tinker, migrations, pg_dump, etc.
+RUN apt-get update && apt-get install -y postgresql-client
 
-EXPOSE 8080
+# Expose port for Render
+EXPOSE 8000
 
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# Copy entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Set entrypoint
+ENTRYPOINT ["entrypoint.sh"]
+
+# Start Laravel server
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
