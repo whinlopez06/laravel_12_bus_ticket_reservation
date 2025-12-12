@@ -12,11 +12,25 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // DB::statement("
+        //     ALTER TABLE bus_schedules
+        //     CHANGE from_bus_location_id from_location_id BIGINT UNSIGNED NOT NULL,
+        //     CHANGE to_bus_location_id to_location_id BIGINT UNSIGNED NOT NULL
+        // ");
         DB::statement("
             ALTER TABLE bus_schedules
-            CHANGE from_bus_location_id from_location_id BIGINT UNSIGNED NOT NULL,
-            CHANGE to_bus_location_id to_location_id BIGINT UNSIGNED NOT NULL
+            RENAME COLUMN from_bus_location_id TO from_location_id;
+            ALTER TABLE bus_schedules
+            RENAME COLUMN to_bus_location_id TO to_location_id;
         ");
+
+        Schema::table('bus_schedules', function (Blueprint $table) {
+            $table->renameColumn('from_bus_location_id', 'from_location_id');
+            $table->renameColumn('to_bus_location_id', 'to_location_id');
+
+            $table->bigInteger('from_location_id')->change();
+            $table->bigInteger('to_location_id')->change();
+        });
     }
 
     /**
